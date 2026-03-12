@@ -60,7 +60,7 @@ public class CounterController {
 
     Optional<Counter> curCounter = counterService.getCounter(1);
     if (request.getAction().equals("inc")) {
-      Integer count = 1;
+      Integer count = 2;
       if (curCounter.isPresent()) {
         count += curCounter.get().getCount();
       }
