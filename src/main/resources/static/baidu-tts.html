@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>百度AI - 文本转语音</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f5f5f5;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .error {
+            color: #d32f2f;
+            background-color: #ffebee;
+            border-color: #ef9a9a;
+        }
+        .success {
+            color: #2e7d32;
+            background-color: #e8f5e9;
+            border-color: #a5d6a7;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 文本转语音</h1>
+        <p style="text-align: center; color: #666;">使用百度AI 将文字转换为语音</p>
+        
+        <div class="form-group">
+            <label for="text">输入文本:</label>
+            <textarea id="text" rows="4" placeholder="请输入要转换为语音的文字...">你好，这是一个文本转语音的测试。</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="cuid">用户标识 (CUID):</label>
+            <input type="text" id="cuid" placeholder="请输入用户唯一标识 (60 字符以内)" value="test_user_001">
+        </div>
+        
+        <button id="convertBtn" onclick="convertTextToAudio()">转换为语音</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        async function convertTextToAudio() {
+            const text = document.getElementById('text').value.trim();
+            const cuid = document.getElementById('cuid').value.trim();
+            const resultDiv = document.getElementById('result');
+            const convertBtn = document.getElementById('convertBtn');
+            
+            // 参数验证
+            if (!text) {
+                showResult('请输入要转换的文本', 'error');
+                return;
+            }
+            
+            if (!cuid) {
+                showResult('请输入用户标识 (CUID)', 'error');
+                return;
+            }
+            
+            // 禁用按钮
+            convertBtn.disabled = true;
+            convertBtn.textContent = '转换中...';
+            
+            try {
+                // 发送请求
+                const response = await fetch('/api/baidu/text2audio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        cuid: cuid,
+                        per: 3,
+                        lan: 'zh',
+                        aue: 3
+                    })
+                });
+                
+                if (response.ok) {
+                    // 获取音频数据
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    // 显示音频播放器
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✓ 转换成功!</strong>
+                            <audio controls autoplay>
+                                <source src="${audioUrl}" type="audio/mpeg">
+                                您的浏览器不支持音频播放。
+                            </audio>
+                        </div>
+                    `;
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result success';
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(errorText || '转换失败');
+                }
+            } catch (error) {
+                console.error('转换失败:', error);
+                showResult('转换失败：' + error.message, 'error');
+            } finally {
+                // 恢复按钮
+                convertBtn.disabled = false;
+                convertBtn.textContent = '转换为语音';
+            }
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="${type}"><strong>${type === 'error' ? '✗' : '✓'}</strong> ${message}</div>`;
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${type}`;
+        }
+    </script>
+</body>
+</html>
