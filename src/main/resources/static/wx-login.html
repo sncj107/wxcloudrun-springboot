@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信登录示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: #07c160;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: #06ad56;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(7, 193, 96, 0.4);
+        }
+
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .user-info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .user-info.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: block;
+            border: 3px solid #07c160;
+        }
+
+        .info-item {
+            margin: 10px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+
+        .message.success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .note {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🎯 微信登录示例</h1>
+        
+        <button class="login-btn" id="loginBtn" onclick="handleLogin()">
+            微信一键登录
+        </button>
+
+        <div class="message" id="message"></div>
+
+        <div class="user-info" id="userInfo">
+            <img class="avatar" id="avatar" src="" alt="用户头像">
+            <div class="info-item">
+                <span class="info-label">昵称：</span>
+                <span id="nickname"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">OpenID：</span>
+                <span id="openId"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">性别：</span>
+                <span id="gender"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">地区：</span>
+                <span id="location"></span>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>注意：</strong>此页面需要在微信小程序环境中运行，或使用微信开发者工具模拟。
+        </div>
+    </div>
+
+    <script>
+        // 检查是否在微信小程序环境
+        function isWeixin() {
+            return typeof wx !== 'undefined' && typeof wx.login === 'function';
+        }
+
+        // 处理登录
+        async function handleLogin() {
+            const loginBtn = document.getElementById('loginBtn');
+            const message = document.getElementById('message');
+            const userInfo = document.getElementById('userInfo');
+
+            // 隐藏之前的消息和用户信息
+            message.style.display = 'none';
+            userInfo.classList.remove('show');
+
+            // 检查是否在微信环境
+            if (!isWeixin()) {
+                showMessage('请在微信小程序环境中运行', 'error');
+                return;
+            }
+
+            // 禁用按钮并显示加载状态
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span>登录中...';
+
+            try {
+                // 1. 调用微信登录获取 code
+                const loginResult = await wxLogin();
+                
+                if (loginResult.errMsg && loginResult.errMsg.indexOf('ok') !== -1) {
+                    const code = loginResult.code;
+                    
+                    // 2. 发送 code 到后端换取用户信息
+                    const response = await fetch('/api/wx/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            code: code
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.code === 0) {
+                        // 登录成功，显示用户信息
+                        showUserInfo(result.data);
+                        showMessage('登录成功！', 'success');
+                    } else {
+                        showMessage(result.errorMsg || '登录失败', 'error');
+                    }
+                } else {
+                    showMessage('微信登录失败：' + (loginResult.errMsg || '未知错误'), 'error');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showMessage('登录异常：' + error.message, 'error');
+            } finally {
+                // 恢复按钮状态
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '微信一键登录';
+            }
+        }
+
+        // 封装微信登录
+        function wxLogin() {
+            return new Promise((resolve) => {
+                wx.login({
+                    timeout: 10000,
+                    success: resolve,
+                    fail: (res) => resolve(res)
+                });
+            });
+        }
+
+        // 显示用户信息
+        function showUserInfo(data) {
+            const userInfo = document.getElementById('userInfo');
+            
+            if (data.userInfo) {
+                document.getElementById('avatar').src = data.userInfo.avatarUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIgZmlsbD0iI2RkZCIvPjwvc3ZnPg==';
+                document.getElementById('nickname').textContent = data.userInfo.nickname || '未设置';
+                document.getElementById('openId').textContent = data.openId || '-';
+                document.getElementById('gender').textContent = getGenderText(data.userInfo.gender);
+                document.getElementById('location').textContent = getLocationText(data.userInfo);
+            } else {
+                document.getElementById('openId').textContent = data.openId || '-';
+                document.getElementById('nickname').textContent = '未设置';
+                document.getElementById('gender').textContent = '-';
+                document.getElementById('location').textContent = '-';
+            }
+
+            userInfo.classList.add('show');
+        }
+
+        // 获取性别文本
+        function getGenderText(gender) {
+            switch(gender) {
+                case 1: return '男';
+                case 2: return '女';
+                default: return '未知';
+            }
+        }
+
+        // 获取地区文本
+        function getLocationText(userInfo) {
+            const parts = [];
+            if (userInfo.province) parts.push(userInfo.province);
+            if (userInfo.city) parts.push(userInfo.city);
+            if (userInfo.country) parts.push(userInfo.country);
+            return parts.join(' ') || '-';
+        }
+
+        // 显示消息
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = 'message ' + type;
+            message.style.display = 'block';
+        }
+
+        // 页面加载时检查环境
+        window.onload = function() {
+            if (!isWeixin()) {
+                showMessage('当前不在微信小程序环境中，部分功能可能无法正常使用', 'error');
+            }
+        };
+    </script>
+</body>
+</html>

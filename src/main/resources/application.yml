@@ -22,3 +22,8 @@ baidu:
     secret-key: ${BAIDU_SECRET_KEY}
     text2audio-url: https://tsn.baidu.com/text2audio
     oauth-url: https://aip.baidubce.com/oauth/2.0/token
+
+wx:
+  miniapp:
+    appid: ${WX_MINIAPP_APPID}
+    secret: ${WX_MINIAPP_SECRET}
