@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tencent.wxcloudrun.dao.WordListMapper">
+
+    <resultMap id="WordListResult" type="com.tencent.wxcloudrun.model.WordList">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="words" column="words"/>
+        <result property="openId" column="openId"/>
+        <result property="createdAt" column="createdAt"/>
+        <result property="updatedAt" column="updatedAt"/>
+    </resultMap>
+
+    <!-- 插入词汇列表 -->
+    <insert id="insert" parameterType="com.tencent.wxcloudrun.model.WordList" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO WordLists (name, words, openId, createdAt, updatedAt)
+        VALUES (#{name}, #{words}, #{openId}, NOW(), NOW())
+    </insert>
+
+    <!-- 根据 ID 删除词汇列表 -->
+    <delete id="deleteById" parameterType="java.lang.Integer">
+        DELETE FROM WordLists WHERE id = #{id}
+    </delete>
+
+    <!-- 更新词汇列表 -->
+    <update id="update" parameterType="com.tencent.wxcloudrun.model.WordList">
+        UPDATE WordLists
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="words != null">words = #{words},</if>
+            updatedAt = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据 ID 查询词汇列表 -->
+    <select id="getById" parameterType="java.lang.Integer" resultMap="WordListResult">
+        SELECT * FROM WordLists WHERE id = #{id}
+    </select>
+
+    <!-- 根据用户 openId 查询所有词汇列表 -->
+    <select id="getByOpenId" parameterType="java.lang.String" resultMap="WordListResult">
+        SELECT * FROM WordLists WHERE openId = #{openId} ORDER BY createdAt DESC
+    </select>
+
+    <!-- 检查词汇列表是否属于指定用户 -->
+    <select id="checkOwnership" resultMap="WordListResult">
+        SELECT * FROM WordLists WHERE id = #{id} AND openId = #{openId}
+    </select>
+
+</mapper>

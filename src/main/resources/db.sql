@@ -1,3 +1,14 @@
+CREATE TABLE `WordLists` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL COMMENT '词汇列表名称',
+  `words` text COMMENT '词汇列表，使用逗号分隔的字符串存储',
+  `openId` varchar(64) NOT NULL COMMENT '所属用户的微信唯一标识',
+  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_openId` (`openId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='词汇列表表';
+
 CREATE TABLE `Counters` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `count` int(11) NOT NULL DEFAULT '1',
