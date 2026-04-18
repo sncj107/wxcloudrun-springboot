@@ -6,6 +6,7 @@ import com.tencent.wxcloudrun.dto.UpdateWordListRequest;
 import com.tencent.wxcloudrun.model.WordList;
 import com.tencent.wxcloudrun.service.WordListService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class WordListServiceImpl implements WordListService {
 
     private final WordListMapper wordListMapper;
@@ -45,7 +47,9 @@ public class WordListServiceImpl implements WordListService {
     public WordList updateWordList(String openId, UpdateWordListRequest request) {
         // 检查所有权
         WordList wordList = wordListMapper.checkOwnership(request.getId(), openId);
+        log.info("更新词汇列表权限检查：id: {}, openId: {}, wordList: {}", request.getId(), openId, wordList);
         if (wordList == null) {
+            log.info("更新词汇列表权限检查失败，词汇列表不存在或无权操作");
             throw new RuntimeException("词汇列表不存在或无权操作");
         }
         
