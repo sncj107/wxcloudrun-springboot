@@ -1,11 +1,15 @@
 package com.tencent.wxcloudrun.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 更新词汇列表请求
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateWordListRequest {
 
     /**

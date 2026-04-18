@@ -6,6 +6,7 @@ import com.tencent.wxcloudrun.dto.UpdateWordListRequest;
 import com.tencent.wxcloudrun.model.WordList;
 import com.tencent.wxcloudrun.service.WordListService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import java.util.List;
 /**
  * 词汇列表控制器
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/wordlists")
 @RequiredArgsConstructor
@@ -72,6 +74,7 @@ public class WordListController {
                                                  HttpServletRequest httpRequest) {
         try {
             String openId = getOpenId(httpRequest);
+            log.info("更新词汇列表权限检查 请求参数：id: {}, openId: {}, words: {}", request.getId(), openId, request.getWords());
             WordList wordList = wordListService.updateWordList(openId, request);
             return ApiResponse.ok(wordList);
         } catch (Exception e) {
