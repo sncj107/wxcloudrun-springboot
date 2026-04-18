@@ -27,3 +27,7 @@ wx:
   miniapp:
     appid: ${WX_MINIAPP_APPID}
     secret: ${WX_MINIAPP_SECRET}
+
+logging:
+  api:
+    enabled: ${API_LOGGING_ENABLED:false}
